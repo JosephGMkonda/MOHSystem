@@ -45,10 +45,14 @@ const Login = ({onLogin}) => {
       console.log('Login successful:', response.data);
       
       
-      if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-      }
+  if (response.data.access) {
+  localStorage.setItem('token', response.data.access);      
+  localStorage.setItem('refresh', response.data.refresh);   
+  console.log('Tokens saved to localStorage');
+} else {
+  console.error('⚠️ No access token in response:', response.data);
+}
+
 
       
 

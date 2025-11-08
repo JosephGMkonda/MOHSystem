@@ -5,6 +5,7 @@ import Home from "./components/Home";
 import Sidebar from "./components/Sidebar"; 
 import Topbar from "./components/Topbar";
 import WorkForce from './components/WorkForce';
+import Deployment from './components/Deployment';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -68,6 +69,23 @@ function App() {
             element={
               isAuthenticated ? 
                 <HomeLayout onLogout={handleLogout}><WorkForce /></HomeLayout> : 
+                <Navigate to="/login" replace />
+            } 
+          />
+
+           <Route 
+            path="/workforce" 
+            element={
+              isAuthenticated ? 
+                <HomeLayout onLogout={handleLogout}><WorkForce /></HomeLayout> : 
+                <Navigate to="/login" replace />
+            } 
+          />
+            <Route 
+            path="/deployments" 
+            element={
+              isAuthenticated ? 
+                <HomeLayout onLogout={handleLogout}><Deployment /></HomeLayout> : 
                 <Navigate to="/login" replace />
             } 
           />
