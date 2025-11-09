@@ -158,7 +158,7 @@ const ViewDetail = ({ worker, isOpen, onClose }) => {
                     {worker.rawData?.organization && (
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
-                        <p className="text-lg text-gray-900">{worker.rawData.organization}</p>
+                        <p className="text-lg text-gray-900">{worker.rawData.organization_name || worker.rawData.organization}</p>
                       </div>
                     )}
                   </div>

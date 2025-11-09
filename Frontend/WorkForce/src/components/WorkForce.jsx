@@ -5,13 +5,16 @@ import ViewDetail from './ViewDetail';
 
 const WorkForce = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('all');
+  const [selectedProfession, setSelectedProfession] = useState('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showViewDetail, setShowViewDetail] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [workers, setWorkers] = useState([]);
+  const [allWorkers, setAllWorkers] = useState([]); // Store all workers for filtering
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [districts, setDistricts] = useState([]);
 
   const getAuthConfig = () => {
     const token = localStorage.getItem('token') || 
@@ -32,12 +35,73 @@ const WorkForce = () => {
     };
   };
 
-const handleViewDetails = (worker) => {
-    console.log('View details:', worker);
+  // Profession normalization mapping
+  const professionMapping = {
+    // Nurse variations
+    'nurse': 'Nurse',
+    'nursing': 'Nurse',
+    'registered nurse': 'Nurse',
+    'rn': 'Nurse',
+    'enrolled nurse': 'Nurse',
+    
+    // Clinical Officer variations
+    'clinician': 'Clinical Officer',
+    'clinical officer': 'Clinical Officer',
+    'clinical': 'Clinical Officer',
+    'co': 'Clinical Officer',
+    
+    // Medical Doctor variations
+    'doctor': 'Medical Doctor',
+    'medical doctor': 'Medical Doctor',
+    'physician': 'Medical Doctor',
+    'md': 'Medical Doctor',
+    
+    // Community Health Worker variations
+    'community health worker': 'Community Health Worker',
+    'chw': 'Community Health Worker',
+    'health surveillance assistant': 'Community Health Worker',
+    'hsa': 'Community Health Worker',
+    'health assistant': 'Community Health Worker',
+    
+    // Midwife variations
+    'midwife': 'Midwife',
+    'midwifery': 'Midwife',
+    
+    // Other common healthcare roles
+    'pharmacist': 'Pharmacist',
+    'lab technician': 'Lab Technician',
+    'laboratory technician': 'Lab Technician',
+    'radiographer': 'Radiographer',
+    'physiotherapist': 'Physiotherapist',
+    'nutritionist': 'Nutritionist'
+  };
+
+  // Normalize profession names
+  const normalizeProfession = (profession) => {
+    if (!profession) return 'Other';
+    
+    const lowerProfession = profession.toLowerCase().trim();
+    
+    // Exact match
+    if (professionMapping[lowerProfession]) {
+      return professionMapping[lowerProfession];
+    }
+    
+    // Partial match
+    for (const [key, value] of Object.entries(professionMapping)) {
+      if (lowerProfession.includes(key) || key.includes(lowerProfession)) {
+        return value;
+      }
+    }
+    
+    // Return original with capitalization if no match found
+    return profession.charAt(0).toUpperCase() + profession.slice(1).toLowerCase();
+  };
+
+  const handleViewDetails = (worker) => {
     setSelectedWorker(worker);
     setShowViewDetail(true);
   };
- 
 
   const handleCloseViewDetail = () => {
     setShowViewDetail(false);
@@ -46,7 +110,19 @@ const handleViewDetails = (worker) => {
 
   useEffect(() => {
     fetchWorkforceData();
+    fetchDistricts();
   }, []);
+
+  // Fetch districts for dropdown
+  const fetchDistricts = async () => {
+    try {
+      const config = getAuthConfig();
+      const response = await axios.get('http://127.0.0.1:8000/api/districts/', config);
+      setDistricts(response.data);
+    } catch (error) {
+      console.error('Error fetching districts:', error);
+    }
+  };
 
   const fetchWorkforceData = async () => {
     try {
@@ -61,24 +137,20 @@ const handleViewDetails = (worker) => {
         return;
       }
 
-    
       const [hcwsResponse, trainingsResponse, availabilityResponse] = await Promise.all([
         axios.get('http://127.0.0.1:8000/api/hcws/', config),
         axios.get('http://127.0.0.1:8000/api/trainings/', config),
         axios.get('http://127.0.0.1:8000/api/availability/', config)
       ]);
 
-      
-
-      
       const transformedWorkers = transformApiData(
         hcwsResponse.data,
         trainingsResponse.data,
         availabilityResponse.data
       );
 
-      setWorkers(transformedWorkers);
-      console.log('Transformed workers:', transformedWorkers);
+      setAllWorkers(transformedWorkers); // Store all workers
+      setWorkers(transformedWorkers); // Initially show all workers
 
     } catch (error) {
       console.error('Error fetching workforce data:', error);
@@ -88,15 +160,12 @@ const handleViewDetails = (worker) => {
     }
   };
 
-  
   const transformApiData = (hcws, trainings, availability) => {
     return hcws.map(hcw => {
-      
       const latestAvailability = availability
         .filter(avail => avail.hcw === hcw.id)
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
 
-      
       const workerTrainings = trainings.filter(training => training.hcw === hcw.id);
       const competencies = [...new Set(workerTrainings.map(t => t.competency_name || t.competency))];
       
@@ -104,12 +173,16 @@ const handleViewDetails = (worker) => {
         ? workerTrainings.sort((a, b) => new Date(b.date_completed) - new Date(a.date_completed))[0].date_completed
         : null;
 
+      const normalizedProfession = normalizeProfession(hcw.position);
+
       return {
         id: hcw.id,
         name: `${hcw.first_name} ${hcw.last_name}`,
-        profession: hcw.position || 'Unknown',
-        district: hcw.facility?.district?.name || hcw.facility_district || 'Unknown',
-        facility: hcw.facility?.name || 'Unknown Facility',
+        profession: normalizedProfession,
+        originalProfession: hcw.position, // Keep original for display
+        district: hcw.facility_details?.district?.name || hcw.facility?.district?.name || 'Unknown',
+        facility: hcw.facility_details?.name || hcw.facility?.name || 'Unknown Facility',
+        organization: hcw.organization_name || `Organization ID: ${hcw.organization}` || 'Unknown Organization',
         phone: hcw.phone || 'No phone',
         status: latestAvailability?.status || 'Unknown',
         competencies: competencies,
@@ -119,12 +192,79 @@ const handleViewDetails = (worker) => {
     });
   };
 
-  const filteredWorkers = workers.filter(worker =>
-    worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    worker.profession.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    worker.district.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    worker.facility.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Complex filtering algorithm
+  const applyFilters = () => {
+    let filtered = allWorkers;
+
+    // District filter
+    if (selectedDistrict !== 'all') {
+      filtered = filtered.filter(worker => 
+        worker.district.toLowerCase() === selectedDistrict.toLowerCase()
+      );
+    }
+
+    // Profession filter
+    if (selectedProfession !== 'all') {
+      filtered = filtered.filter(worker => 
+        worker.profession.toLowerCase() === selectedProfession.toLowerCase()
+      );
+    }
+
+    // Search term filter
+    if (searchTerm) {
+      filtered = filtered.filter(worker =>
+        worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        worker.profession.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        worker.originalProfession.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        worker.district.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        worker.facility.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        worker.organization.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  // Get unique professions for dropdown (normalized)
+  const getUniqueProfessions = () => {
+    const professions = [...new Set(allWorkers.map(worker => worker.profession))];
+    return professions.sort();
+  };
+
+  // Get statistics for current filtered view
+  const getStatistics = () => {
+    const currentWorkers = applyFilters();
+    
+    return {
+      total: currentWorkers.length,
+      available: currentWorkers.filter(w => w.status?.toLowerCase() === 'available').length,
+      deployed: currentWorkers.filter(w => w.status?.toLowerCase() === 'deployed').length,
+      onLeave: currentWorkers.filter(w => w.status?.toLowerCase() === 'on_leave' || w.status?.toLowerCase() === 'on leave').length,
+      byProfession: currentWorkers.reduce((acc, worker) => {
+        acc[worker.profession] = (acc[worker.profession] || 0) + 1;
+        return acc;
+      }, {})
+    };
+  };
+
+  // Handle filter changes
+  const handleDistrictChange = (district) => {
+    setSelectedDistrict(district);
+  };
+
+  const handleProfessionChange = (profession) => {
+    setSelectedProfession(profession);
+  };
+
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchTerm('');
+    setSelectedDistrict('all');
+    setSelectedProfession('all');
+  };
+
+  const filteredWorkers = applyFilters();
+  const statistics = getStatistics();
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -146,6 +286,7 @@ const handleViewDetails = (worker) => {
 
   const handleRefresh = () => {
     fetchWorkforceData();
+    resetFilters();
   };
 
   const handleDeleteWorker = async (workerId) => {
@@ -157,8 +298,7 @@ const handleViewDetails = (worker) => {
       const config = getAuthConfig();
       await axios.delete(`http://127.0.0.1:8000/api/hcws/${workerId}/`, config);
       
-      
-      setWorkers(prev => prev.filter(w => w.id !== workerId));
+      setAllWorkers(prev => prev.filter(w => w.id !== workerId));
       alert('Healthcare worker deleted successfully!');
     } catch (error) {
       console.error('Error deleting worker:', error);
@@ -166,6 +306,7 @@ const handleViewDetails = (worker) => {
     }
   };
 
+  // Loading and error states remain the same...
   if (loading) {
     return (
       <div className="p-6">
@@ -199,16 +340,16 @@ const handleViewDetails = (worker) => {
 
   return (
     <div className="p-6">
-      
+      {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Healthcare Workforce</h1>
           <p className="text-gray-600 mt-2">Manage and monitor healthcare workers across Malawi</p>
           <div className="flex items-center space-x-4 mt-2">
             <span className={`text-xs px-2 py-1 rounded-full ${
-              workers.length > 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+              allWorkers.length > 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
             }`}>
-              {workers.length > 0 ? '✅ Live Data' : '⚠️ No Data'}
+              {allWorkers.length > 0 ? '✅ Live Data' : '⚠️ No Data'}
             </span>
             <button
               onClick={handleRefresh}
@@ -217,6 +358,15 @@ const handleViewDetails = (worker) => {
               <span>🔄</span>
               <span>Refresh</span>
             </button>
+            {(selectedDistrict !== 'all' || selectedProfession !== 'all' || searchTerm) && (
+              <button
+                onClick={resetFilters}
+                className="text-sm text-red-600 hover:text-red-800 flex items-center space-x-1"
+              >
+                <span>🗑️</span>
+                <span>Clear Filters</span>
+              </button>
+            )}
           </div>
         </div>
         <button
@@ -228,13 +378,16 @@ const handleViewDetails = (worker) => {
         </button>
       </div>
 
-    
+      {/* Statistics Cards - Now dynamic based on filters */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Workers</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{workers.length}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{statistics.total}</p>
+              {selectedDistrict !== 'all' && (
+                <p className="text-xs text-gray-500 mt-1">in {selectedDistrict}</p>
+              )}
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
               <span className="text-blue-600 text-2xl">👥</span>
@@ -247,7 +400,10 @@ const handleViewDetails = (worker) => {
             <div>
               <p className="text-sm font-medium text-gray-600">Available</p>
               <p className="text-3xl font-bold text-green-600 mt-1">
-                {workers.filter(w => w.status?.toLowerCase() === 'available').length}
+                {statistics.available}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {statistics.total > 0 ? Math.round((statistics.available / statistics.total) * 100) : 0}% available
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
@@ -261,7 +417,10 @@ const handleViewDetails = (worker) => {
             <div>
               <p className="text-sm font-medium text-gray-600">Deployed</p>
               <p className="text-3xl font-bold text-blue-600 mt-1">
-                {workers.filter(w => w.status?.toLowerCase() === 'deployed').length}
+                {statistics.deployed}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {statistics.total > 0 ? Math.round((statistics.deployed / statistics.total) * 100) : 0}% deployed
               </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
@@ -275,7 +434,10 @@ const handleViewDetails = (worker) => {
             <div>
               <p className="text-sm font-medium text-gray-600">On Leave</p>
               <p className="text-3xl font-bold text-yellow-600 mt-1">
-                {workers.filter(w => w.status?.toLowerCase() === 'on_leave' || w.status?.toLowerCase() === 'on leave').length}
+                {statistics.onLeave}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {statistics.total > 0 ? Math.round((statistics.onLeave / statistics.total) * 100) : 0}% on leave
               </p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-lg">
@@ -285,7 +447,7 @@ const handleViewDetails = (worker) => {
         </div>
       </div>
 
-      
+      {/* Filter Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
           <div className="flex-1 max-w-md">
@@ -305,25 +467,62 @@ const handleViewDetails = (worker) => {
             </div>
           </div>
           <div className="flex space-x-3">
-            <select className="border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200">
-              <option>All Districts</option>
-              <option>Lilongwe</option>
-              <option>Blantyre</option>
-              <option>Mzuzu</option>
-              <option>Zomba</option>
+            <select 
+              value={selectedDistrict}
+              onChange={(e) => handleDistrictChange(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+            >
+              <option value="all">All Districts</option>
+              {districts.map(district => (
+                <option key={district.id} value={district.name}>
+                  {district.name}
+                </option>
+              ))}
             </select>
-            <select className="border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200">
-              <option>All Professions</option>
-              <option>Nurse</option>
-              <option>Clinical Officer</option>
-              <option>Medical Doctor</option>
-              <option>Community Health Worker</option>
+            <select 
+              value={selectedProfession}
+              onChange={(e) => handleProfessionChange(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+            >
+              <option value="all">All Professions</option>
+              {getUniqueProfessions().map(profession => (
+                <option key={profession} value={profession}>
+                  {profession}
+                </option>
+              ))}
             </select>
           </div>
         </div>
+        
+        {/* Active Filters Display */}
+        {(selectedDistrict !== 'all' || selectedProfession !== 'all') && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {selectedDistrict !== 'all' && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                District: {selectedDistrict}
+                <button 
+                  onClick={() => setSelectedDistrict('all')}
+                  className="ml-2 hover:text-blue-600"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {selectedProfession !== 'all' && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Profession: {selectedProfession}
+                <button 
+                  onClick={() => setSelectedProfession('all')}
+                  className="ml-2 hover:text-green-600"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -464,20 +663,18 @@ const handleViewDetails = (worker) => {
         </div>
       </div>
 
-      
-  
+
+     
 
       <AddHealthWorker
         isOpen={showAddForm}
         onClose={() => setShowAddForm(false)}
         onSuccess={() => {
           setShowAddForm(false);
-          
           fetchWorkforceData();
-          
         }}
       />
-       <ViewDetail
+      <ViewDetail
         worker={selectedWorker}
         isOpen={showViewDetail}
         onClose={handleCloseViewDetail}

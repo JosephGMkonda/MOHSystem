@@ -31,12 +31,12 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
     competencies: []
   });
 
-  // Enhanced getAuthConfig function that looks for "token" key
+
   const getAuthConfig = () => {
-    // Check for token in multiple possible locations - including "token"
-    let token = localStorage.getItem('token'); // This is the key!
     
-    // Also check other common locations
+    let token = localStorage.getItem('token'); 
+    
+
     if (!token) {
       token = localStorage.getItem('authToken');
     }
@@ -44,7 +44,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
       token = localStorage.getItem('access');
     }
 
-    // If not found, check if it's stored in user object
+
     if (!token) {
       const userData = localStorage.getItem('user');
       if (userData) {
@@ -57,22 +57,14 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
       }
     }
 
-    console.log('🔐 Token search result:', {
-      found: !!token,
-      fromToken: localStorage.getItem('token'),        // Check this one!
-      fromAuthToken: localStorage.getItem('authToken'),
-      fromAccess: localStorage.getItem('access'),
-      fromUser: localStorage.getItem('user'),
-      allLocalStorageKeys: Object.keys(localStorage)   // See all keys
-    });
+   
 
     if (!token) {
       console.warn('No authentication token found in localStorage');
-      console.log('Available localStorage keys:', Object.keys(localStorage));
       return {};
     }
 
-    console.log('✅ Token found:', token.substring(0, 20) + '...');
+    
 
     return {
       headers: {
@@ -83,12 +75,10 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
     };
   };
 
-  // Fetch dropdown data
+  
   useEffect(() => {
     if (isOpen) {
-      console.log('🔄 Opening form, checking authentication...');
       
-      // Quick check what's in localStorage
       console.log('📋 localStorage contents:', Object.keys(localStorage).map(key => ({
         key,
         value: key === 'token' ? localStorage.getItem(key)?.substring(0, 20) + '...' : localStorage.getItem(key)
@@ -109,20 +99,16 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
 
       const config = getAuthConfig();
       
-      console.log('📡 Fetching dropdown data with config:', {
-        hasAuthHeader: !!config.headers?.Authorization,
-        authHeader: config.headers?.Authorization ? 'Bearer ***' : 'None',
-        endpoints: Object.keys(endpoints)
-      });
+      
 
-      // If no auth token, use fallback data immediately
+      
       if (!config.headers?.Authorization) {
-        console.log('🚫 No auth token, using fallback data');
+    
         setDropdownData(getFallbackData());
         return;
       }
 
-      // Fetch all endpoints with authentication
+    
       const [districtsResponse, organizationsResponse, facilitiesResponse, competenciesResponse] = await Promise.all([
         axios.get(endpoints.districts, config).catch(error => {
           console.error('Districts fetch error:', error.response?.status);
@@ -149,24 +135,19 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
         competencies: extractData(competenciesResponse.data)
       };
 
-      console.log('✅ Dropdown data loaded:', {
-        districts: dropdownDataResult.districts.length,
-        organizations: dropdownDataResult.organizations.length,
-        facilities: dropdownDataResult.facilities.length,
-        competencies: dropdownDataResult.competencies.length
-      });
+    
 
       setDropdownData(dropdownDataResult);
 
     } catch (error) {
-      console.error('❌ Error fetching dropdown data:', error);
+      console.error('Error fetching dropdown data:', error);
       
-      // Use fallback data
+      
       setDropdownData(getFallbackData());
     }
   };
 
-  // Helper function to extract data from different response formats
+
   const extractData = (responseData) => {
     if (Array.isArray(responseData)) {
       return responseData;
@@ -178,39 +159,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
     return [];
   };
 
-  // Enhanced fallback data
-  const getFallbackData = () => {
-    console.log('🔄 Using fallback data');
-    return {
-      districts: [
-        { id: 1, name: 'Lilongwe', code: 'LL' },
-        { id: 2, name: 'Blantyre', code: 'BL' },
-        { id: 3, name: 'Mzuzu', code: 'MZ' },
-        { id: 4, name: 'Zomba', code: 'ZB' },
-        { id: 5, name: 'Kasungu', code: 'KS' }
-      ],
-      organizations: [
-        { id: 1, name: 'Ministry of Health' },
-        { id: 2, name: 'CHAM' },
-        { id: 3, name: 'Partners in Health' },
-        { id: 4, name: 'World Health Organization' }
-      ],
-      facilities: [
-        { id: 1, name: 'Kamuzu Central Hospital', district: 1, district_name: 'Lilongwe' },
-        { id: 2, name: 'Queen Elizabeth Central Hospital', district: 2, district_name: 'Blantyre' },
-        { id: 3, name: 'Mzuzu Central Hospital', district: 3, district_name: 'Mzuzu' },
-        { id: 4, name: 'Zomba Central Hospital', district: 4, district_name: 'Zomba' },
-        { id: 5, name: 'Kasungu District Hospital', district: 5, district_name: 'Kasungu' }
-      ],
-      competencies: [
-        { id: 1, code: 'IPC', name: 'Infection Prevention and Control' },
-        { id: 2, code: 'VAC', name: 'Vaccination Administration' },
-        { id: 3, code: 'CM', name: 'Case Management' },
-        { id: 4, code: 'TEST', name: 'COVID-19 Testing' },
-        { id: 5, code: 'TRACE', name: 'Contact Tracing' }
-      ]
-    };
-  };
+ 
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -254,17 +203,38 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
     try {
       const config = getAuthConfig();
       
-      console.log('🚀 Submitting form with auth:', {
-        hasAuth: !!config.headers?.Authorization,
-        tokenExists: !!localStorage.getItem('token')
-      });
+     
 
-      // Check if we have authentication
+       console.log('Form data being submitted:', {
+      facility: formData.facility,
+      facilityType: typeof formData.facility,
+      allFormData: formData
+    });
+
+
+        const hcwPayload = {
+      national_id: formData.national_id,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone: formData.phone,
+      email: formData.email,
+      gender: formData.gender,
+      disability: formData.disability,
+      language: formData.language,
+      position: formData.position,
+      facility: Number(formData.facility), 
+      organization: formData.organization ? Number(formData.organization): null,
+      is_active: true
+    };
+
+    console.log('📤 HCW Payload:', hcwPayload);
+
+
+      
       if (!config.headers?.Authorization) {
-        alert('⚠️ Authentication required. Please log in again.');
+        alert('Authentication required. Please log in again.');
         
-        // Show what's actually in localStorage
-        console.log('🔍 Current localStorage:', Object.keys(localStorage));
+        
         
         setLoading(false);
         return;
@@ -272,26 +242,13 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
 
       // 1. Create healthcare worker
       const hcwResponse = await axios.post(
-        'http://127.0.0.1:8000/api/hcws/', 
-        {
-          national_id: formData.national_id,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          phone: formData.phone,
-          email: formData.email,
-          gender: formData.gender,
-          disability: formData.disability,
-          language: formData.language,
-          position: formData.position,
-          facility: formData.facility,
-          organization: formData.organization,
-          is_active: true
-        },
-        config
+        'http://127.0.0.1:8000/api/hcws/', hcwPayload, config
       );
 
+      console.log('HCW Payload:', hcwPayload);
+
       const hcwId = hcwResponse.data.id;
-      console.log('✅ Healthcare worker created with ID:', hcwId);
+      
 
       // 2. Create trainings (if any)
       if (formData.trainings.length > 0) {
@@ -311,7 +268,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
           );
 
         await Promise.all(trainingPromises);
-        console.log('✅ Trainings created successfully');
+        
       }
 
       
@@ -326,7 +283,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
         config
       );
 
-      console.log('Availability record created successfully');
+      
 
       onSuccess();
       onClose();
@@ -338,7 +295,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
       console.error('Error creating healthcare worker:', error);
 
       if (error.response?.status === 401) {
-        alert('🔐 Authentication failed. Please log in again.');
+        alert('Authentication failed. Please log in again.');
       } else if (error.response?.status === 400) {
         const errors = error.response.data;
         let errorMessage = 'Please check the form for errors:\n';
@@ -349,7 +306,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
         
         alert(errorMessage);
       } else {
-        alert('❌ Error creating healthcare worker. Please try again.');
+        alert('Error creating healthcare worker. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -403,10 +360,10 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
 
   return (
     <>
-      {/* Glass Morphism Backdrop */}
+      
       <div className="fixed inset-0 bg-gradient-to-br from-blue-400/20 via-purple-500/20 to-pink-400/20 backdrop-blur-2xl backdrop-saturate-150 z-40"></div>
       
-      {/* Animated Background Elements */}
+      
       <div className="fixed inset-0 z-40 overflow-hidden">
         <div className="absolute -top-40 -right-32 w-80 h-80 bg-blue-300/10 rounded-full blur-3xl animate-pulse-slow"></div>
         <div className="absolute -bottom-40 -left-32 w-80 h-80 bg-purple-300/10 rounded-full blur-3xl animate-pulse-slow" style={{animationDelay: '2s'}}></div>

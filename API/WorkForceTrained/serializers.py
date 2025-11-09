@@ -38,22 +38,26 @@ class CompetencySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class HealthcareWorkerSerializer(serializers.ModelSerializer):
-    facility = FacilitySerializer(read_only=True)
-    facility_id = serializers.PrimaryKeyRelatedField(
-        source="facility", queryset=Facility.objects.all(),
-        write_only=True, required=False, allow_null=True
-    )
+    facility_details = FacilitySerializer(source="facility", read_only=True)
     organization_name = serializers.CharField(source="organization.name", read_only=True)
+    
 
     class Meta:
         model = HealthcareWorker
         fields = [
             "id", "national_id", "first_name", "last_name", "phone", "email",
             "gender", "disability", "language", "position", "is_active",
-            "facility", "facility_id", "organization", "organization_name",
+            "facility","facility_details","organization", "organization_name",
             "created_at", "updated_at"
         ]
+        extra_kwargs = {'facility': {'write_only': False}}
 
+    def validate_facility_id(self, value):
+        if not value:
+            raise serializers.ValidationError("Facility is required.")
+        return value
+
+   
 
 class TrainingSerializer(serializers.ModelSerializer):
     hcw_name = serializers.CharField(source="hcw.__str__", read_only=True)

@@ -1,5 +1,9 @@
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+import traceback
+from WorkForceTrained.analytics import get_healthcare_data_summary
 from .models import (
     District, Organization, Facility, Competency,
     HealthcareWorker, Training, AvailabilityRecord,
@@ -82,3 +86,41 @@ class CovidSnapshotViewSet(viewsets.ModelViewSet):
     filterset_fields = ["district", "source"]
     ordering_fields = ["timestamp"]
     ordering = ["-timestamp"]
+
+
+
+
+
+@api_view(["GET"])
+def healthcare_dashboard_data(request):
+    """
+    Healthcare dashboard data with filter support
+    """
+    # Extract filter parameters from request
+    filters = {
+        'district': request.GET.get('district'),
+        'gender': request.GET.get('gender'),
+        'organization': request.GET.get('organization'),
+        'facility_type': request.GET.get('facility_type'),
+    }
+    
+    # Remove None values and empty strings
+    filters = {k: v for k, v in filters.items() if v is not None and v != ''}
+    
+    print(f"Received filters: {filters}")  # Debug
+    
+    try:
+        data = get_healthcare_data_summary(filters)
+        return Response(data)
+    except Exception as e:
+        print(f"Error in healthcare_dashboard_data: {str(e)}")
+        print(traceback.format_exc())  # Full stack trace
+        return Response(
+            {
+                "error": "Failed to fetch dashboard data",
+                "details": str(e),
+                "stack_trace": traceback.format_exc(),
+                "received_filters": filters
+            },
+            status=500
+        )
