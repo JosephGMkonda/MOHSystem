@@ -1,82 +1,102 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import MalawiLogo from "../assets/MalawiLogo.png";
 
 const Login = ({onLogin}) => {
   const [formData, setFormData] = useState({
-    username: '',  
-    password: '',
-    rememberMe: false
+    username: "",
+    password: "",
+    rememberMe: false,
   });
-
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // ✅ Automatically stay logged in after refresh
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const refresh = localStorage.getItem("refresh");
+
+    if (token && refresh) {
+      console.log("🔐 User already logged in, skipping login page...");
+      onLogin();
+      navigate("/home");
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
-
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-    
-      const response = await axios.post('http://127.0.0.1:8000/api/users/login/', {
+      const response = await axios.post("http://127.0.0.1:8000/api/users/login/", {
         username: formData.username,
-        password: formData.password
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        password: formData.password,
       });
 
-    
-      console.log('Login successful:', response.data);
-      
-      
-  if (response.data.access) {
-  localStorage.setItem('token', response.data.access);      
-  localStorage.setItem('refresh', response.data.refresh);   
-  console.log('Tokens saved to localStorage');
-} else {
-  console.error('⚠️ No access token in response:', response.data);
-}
+      console.log("✅ Login successful:", response.data);
 
-
-      
-
-      onLogin()
-      navigate('/home');
-
-    } catch (err) {
-      
-      console.error('Login error:', err);
-      
-      if (err.response) {
-        
-        setError(err.response.data.message || 'Invalid username or password');
-      } else if (err.request) {
-        
-        setError('Network error. Please check your connection.');
+      if (response.data.access && response.data.refresh) {
+        // ✅ Save tokens
+        localStorage.setItem("token", response.data.access);
+        localStorage.setItem("refresh", response.data.refresh);
+        console.log("💾 Tokens saved to localStorage");
       } else {
-        
-        setError('An unexpected error occurred.');
+        throw new Error("No tokens in response");
+      }
+
+      onLogin();
+      navigate("/home");
+    } catch (err) {
+      console.error("❌ Login error:", err);
+      if (err.response) {
+        setError(err.response.data.detail || "Invalid username or password");
+      } else if (err.request) {
+        setError("Network error. Please check your connection.");
+      } else {
+        setError("Unexpected error occurred.");
       }
     } finally {
       setLoading(false);
     }
   };
+
+  // ✅ Token refresh logic
+  const refreshAccessToken = async () => {
+    try {
+      const refresh = localStorage.getItem("refresh");
+      if (!refresh) return;
+
+      const response = await axios.post("http://127.0.0.1:8000/api/token/refresh/", { refresh });
+      const newAccess = response.data.access;
+      localStorage.setItem("token", newAccess);
+      console.log("♻️ Access token refreshed automatically");
+    } catch (error) {
+      console.warn("⚠️ Refresh token expired, logging out...");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refresh");
+      navigate("/login");
+    }
+  };
+
+  // ✅ Automatically refresh token every 14 minutes (if 15 min expiry)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshAccessToken();
+    }, 14 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
