@@ -294,85 +294,87 @@ const fetchDashboardData = async (filters = {}) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm font-medium">Total Workers</p>
-              <p className="text-3xl font-bold mt-1">{summary?.total_workers || 0}</p>
-              {selectedDistrict !== 'all' && (
-                <p className="text-blue-200 text-xs mt-1">in {selectedDistrict}</p>
-              )}
-            </div>
-            <div className="bg-blue-400/20 p-3 rounded-lg">
-              <span className="text-2xl">👥</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-green-100 text-sm font-medium">Active Workers</p>
-              <p className="text-3xl font-bold mt-1">{summary?.active_workers || 0}</p>
-              <p className="text-green-200 text-xs mt-1">
-                {summary?.total_workers ? Math.round((summary.active_workers / summary.total_workers) * 100) : 0}% active
-              </p>
-            </div>
-            <div className="bg-green-400/20 p-3 rounded-lg">
-              <span className="text-2xl">✅</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-purple-100 text-sm font-medium">Facilities</p>
-              <p className="text-3xl font-bold mt-1">{summary?.total_facilities || 0}</p>
-            </div>
-            <div className="bg-purple-400/20 p-3 rounded-lg">
-              <span className="text-2xl">🏥</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-orange-100 text-sm font-medium">Organizations</p>
-              <p className="text-3xl font-bold mt-1">{summary?.total_organizations || 0}</p>
-            </div>
-            <div className="bg-orange-400/20 p-3 rounded-lg">
-              <span className="text-2xl">🤝</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-pink-100 text-sm font-medium">Competencies</p>
-              <p className="text-3xl font-bold mt-1">{summary?.total_competencies || 0}</p>
-            </div>
-            <div className="bg-pink-400/20 p-3 rounded-lg">
-              <span className="text-2xl">🎓</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-teal-100 text-sm font-medium">Trainings</p>
-              <p className="text-3xl font-bold mt-1">{summary?.total_trainings || 0}</p>
-            </div>
-            <div className="bg-teal-400/20 p-3 rounded-lg">
-              <span className="text-2xl">📚</span>
-            </div>
-          </div>
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+  {/* Row 1 - Top 3 cards */}
+  <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-gray-600 text-sm font-medium">Total Workers</p>
+        <p className="text-3xl font-bold mt-1 text-gray-900">{summary?.total_workers || 0}</p>
+        {selectedDistrict !== 'all' && (
+          <p className="text-gray-500 text-xs mt-1">in {selectedDistrict}</p>
+        )}
       </div>
+      <div className="bg-gray-100 p-3 rounded-lg">
+        <span className="text-2xl">👥</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-gray-600 text-sm font-medium">Active Workers</p>
+        <p className="text-3xl font-bold mt-1 text-gray-900">{summary?.active_workers || 0}</p>
+        <p className="text-gray-500 text-xs mt-1">
+          {summary?.total_workers ? Math.round((summary.active_workers / summary.total_workers) * 100) : 0}% active
+        </p>
+      </div>
+      <div className="bg-gray-100 p-3 rounded-lg">
+        <span className="text-2xl">✅</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-gray-600 text-sm font-medium">Facilities</p>
+        <p className="text-3xl font-bold mt-1 text-gray-900">{summary?.total_facilities || 0}</p>
+      </div>
+      <div className="bg-gray-100 p-3 rounded-lg">
+        <span className="text-2xl">🏥</span>
+      </div>
+    </div>
+  </div>
+
+  {/* Row 2 - Bottom 3 cards */}
+  <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-gray-600 text-sm font-medium">Organizations</p>
+        <p className="text-3xl font-bold mt-1 text-gray-900">{summary?.total_organizations || 0}</p>
+      </div>
+      <div className="bg-gray-100 p-3 rounded-lg">
+        <span className="text-2xl">🤝</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-gray-600 text-sm font-medium">Competencies</p>
+        <p className="text-3xl font-bold mt-1 text-gray-900">{summary?.total_competencies || 0}</p>
+      </div>
+      <div className="bg-gray-100 p-3 rounded-lg">
+        <span className="text-2xl">🎓</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-gray-600 text-sm font-medium">Trainings</p>
+        <p className="text-3xl font-bold mt-1 text-gray-900">{summary?.total_trainings || 0}</p>
+      </div>
+      <div className="bg-gray-100 p-3 rounded-lg">
+        <span className="text-2xl">📚</span>
+      </div>
+    </div>
+  </div>
+</div>
 
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white rounded-xl shadow-lg p-6">
