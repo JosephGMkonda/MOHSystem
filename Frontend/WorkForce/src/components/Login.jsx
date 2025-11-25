@@ -40,7 +40,7 @@ const Login = ({onLogin}) => {
     setError("");
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/users/login/", {
+      const response = await axios.post("https://mohsystem.onrender.com/api/users/login/", {
         username: formData.username,
         password: formData.password,
       });
@@ -78,7 +78,7 @@ const Login = ({onLogin}) => {
       const refresh = localStorage.getItem("refresh");
       if (!refresh) return;
 
-      const response = await axios.post("http://127.0.0.1:8000/api/token/refresh/", { refresh });
+      const response = await axios.post("https://mohsystem.onrender.com/api/token/refresh/", { refresh });
       const newAccess = response.data.access;
       localStorage.setItem("token", newAccess);
       console.log("♻️ Access token refreshed automatically");

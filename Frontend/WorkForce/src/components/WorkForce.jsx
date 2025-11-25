@@ -117,7 +117,7 @@ const WorkForce = () => {
   const fetchDistricts = async () => {
     try {
       const config = getAuthConfig();
-      const response = await axios.get('http://127.0.0.1:8000/api/districts/', config);
+      const response = await axios.get('https://mohsystem.onrender.com/api/districts/', config);
       setDistricts(response.data);
     } catch (error) {
       console.error('Error fetching districts:', error);
@@ -138,9 +138,9 @@ const WorkForce = () => {
       }
 
       const [hcwsResponse, trainingsResponse, availabilityResponse] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/api/hcws/', config),
-        axios.get('http://127.0.0.1:8000/api/trainings/', config),
-        axios.get('http://127.0.0.1:8000/api/availability/', config)
+        axios.get('https://mohsystem.onrender.com/api/hcws/', config),
+        axios.get('https://mohsystem.onrender.com/api/trainings/', config),
+        axios.get('https://mohsystem.onrender.com/api/availability/', config)
       ]);
 
       const transformedWorkers = transformApiData(
@@ -296,7 +296,7 @@ const WorkForce = () => {
 
     try {
       const config = getAuthConfig();
-      await axios.delete(`http://127.0.0.1:8000/api/hcws/${workerId}/`, config);
+      await axios.delete(`https://mohsystem.onrender.com/api/hcws/${workerId}/`, config);
       
       setAllWorkers(prev => prev.filter(w => w.id !== workerId));
       alert('Healthcare worker deleted successfully!');

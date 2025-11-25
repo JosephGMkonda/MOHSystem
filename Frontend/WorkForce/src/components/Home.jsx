@@ -66,7 +66,7 @@ const fetchDashboardData = async (filters = {}) => {
     if (filters.facility_type && filters.facility_type !== 'all') params.append('facility_type', filters.facility_type);
 
 
-    const baseUrl = 'http://127.0.0.1:8000/api/dashboard/summary/';
+    const baseUrl = 'https://mohsystem.onrender.com/api/dashboard/summary/';
     const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
     
     console.log('Fetching dashboard data from:', url);
