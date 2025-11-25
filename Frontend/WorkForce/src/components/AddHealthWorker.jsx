@@ -91,10 +91,10 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
   const fetchDropdownData = async () => {
     try {
       const endpoints = {
-        districts: 'http://127.0.0.1:8000/api/districts/',
-        organizations: 'http://127.0.0.1:8000/api/organizations/',
-        facilities: 'http://127.0.0.1:8000/api/facilities/',
-        competencies: 'http://127.0.0.1:8000/api/competencies/'
+        districts: 'https://mohsystem.onrender.com/api/districts/',
+        organizations: 'https://mohsystem.onrender.com/api/organizations/',
+        facilities: 'https://mohsystem.onrender.com/api/facilities/',
+        competencies: 'https://mohsystem.onrender.com/api/competencies/'
       };
 
       const config = getAuthConfig();
@@ -227,7 +227,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
       is_active: true
     };
 
-    console.log('📤 HCW Payload:', hcwPayload);
+    
 
 
       
@@ -242,10 +242,10 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
 
       // 1. Create healthcare worker
       const hcwResponse = await axios.post(
-        'http://127.0.0.1:8000/api/hcws/', hcwPayload, config
+        'https://mohsystem.onrender.com/api/hcws/', hcwPayload, config
       );
 
-      console.log('HCW Payload:', hcwPayload);
+    
 
       const hcwId = hcwResponse.data.id;
       
@@ -256,7 +256,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
           .filter(training => training.date_completed)
           .map(training =>
             axios.post(
-              'http://127.0.0.1:8000/api/trainings/', 
+              'https://mohsystem.onrender.com/api/trainings/', 
               {
                 hcw: hcwId,
                 competency: training.competency,
@@ -273,7 +273,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
 
       
       await axios.post(
-        'http://127.0.0.1:8000/api/availability/', 
+        'https://mohsystem.onrender.com/api/availability/', 
         {
           hcw: hcwId,
           status: formData.status,
