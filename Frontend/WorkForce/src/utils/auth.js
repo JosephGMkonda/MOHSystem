@@ -40,7 +40,7 @@ export const getAuthConfig = () => {
 
 // Create axios instance with base URL
 export const authAxios = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/',
+  baseURL: 'https://mohsystem.onrender.com/api/',
 });
 
 // Add request interceptor to include auth token
