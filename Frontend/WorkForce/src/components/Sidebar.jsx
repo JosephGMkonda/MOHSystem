@@ -10,6 +10,7 @@ const Sidebar = ({ onLogout }) => {
     { path: '/workforce', label: 'Workforce', icon: '👥' },
     { path: '/deployments', label: 'Deployments', icon: '🚑' },
     { path: '/analytics', label: 'Analytics', icon: '📈' },
+     { path: '/deployment-history', icon: '📚', label: 'Deployment History' },
   ];
 
   return (

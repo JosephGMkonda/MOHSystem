@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     District, Organization, Facility, Competency,
     HealthcareWorker, Training, AvailabilityRecord,
-    Deployment, CovidSnapshot
+    Deployment
 )
 
 @admin.register(District)
@@ -73,10 +73,4 @@ class DeploymentAdmin(admin.ModelAdmin):
     date_hierarchy = "start_date"
 
 
-@admin.register(CovidSnapshot)
-class CovidSnapshotAdmin(admin.ModelAdmin):
-    list_display = ("timestamp", "district", "cases", "today_cases", "deaths", "active", "source")
-    list_filter = ("district", "source")
-    date_hierarchy = "timestamp"
-    ordering = ("-timestamp",)
 

@@ -4,15 +4,31 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import traceback
 from WorkForceTrained.analytics import get_healthcare_data_summary
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.db.models import Prefetch, OuterRef, Subquery
+from django.http import HttpResponse
+import csv
+from io import StringIO, BytesIO
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from django.db.models import Q
+from django.utils.timezone import localtime
+from django.db import transaction
+
+
+
 from .models import (
     District, Organization, Facility, Competency,
     HealthcareWorker, Training, AvailabilityRecord,
-    Deployment, CovidSnapshot
+    Deployment, DeploymentHistory
 )
 from .serializers import (
-    DistrictSerializer, OrganizationSerializer, FacilitySerializer,
+    DistrictSerializer, OrganizationSerializer, FacilitySerializer,DeploymentWizardRequestSerializer,
     CompetencySerializer, HealthcareWorkerSerializer, TrainingSerializer,
-    AvailabilityRecordSerializer, DeploymentSerializer, CovidSnapshotSerializer
+    AvailabilityRecordSerializer, DeploymentSerializer, DeploymentCandidateSerializer,DeploymentHistorySerializer
 )
 
 
@@ -54,6 +70,13 @@ class HealthcareWorkerViewSet(viewsets.ModelViewSet):
     ordering_fields = ["last_name", "first_name", "updated_at"]
     ordering = ["last_name"]
 
+class DeploymentHistoryViewSet(viewsets.ModelViewSet):
+    queryset = DeploymentHistory.objects.all()
+    serializer_class = DeploymentHistorySerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ["outbreak_type", "district_name"]
+    search_fields = ["hcw_name", "deployment_name"]
+    
 
 class TrainingViewSet(viewsets.ModelViewSet):
     queryset = Training.objects.select_related("hcw", "competency")
@@ -72,23 +95,96 @@ class AvailabilityRecordViewSet(viewsets.ModelViewSet):
 
 
 class DeploymentViewSet(viewsets.ModelViewSet):
-    queryset = Deployment.objects.select_related("hcw", "district")
+    queryset = Deployment.objects.filter(status="active")  # Only show active deployments
     serializer_class = DeploymentSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ["outbreak_type", "status", "district"]
     search_fields = ["hcw__first_name", "hcw__last_name", "role"]
 
+    @action(detail=False, methods=['get'])
+    def active_count(self, request):
+        """
+        Get count of active deployments
+        """
+        try:
+            count = Deployment.objects.filter(status="active").count()
+            return Response({'active_count': count})
+        except Exception as e:
+            return Response(
+                {'error': str(e), 'detail': 'Failed to get active count'},
+                status=500
+            )
 
-class CovidSnapshotViewSet(viewsets.ModelViewSet):
-    queryset = CovidSnapshot.objects.select_related("district")
-    serializer_class = CovidSnapshotSerializer
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ["district", "source"]
-    ordering_fields = ["timestamp"]
-    ordering = ["-timestamp"]
+    @action(detail=False, methods=['post'])
+    def archive_all(self, request):
+        """
+        Archive all active deployments and move to history
+        """
+        try:
+            completion_notes = request.data.get('completion_notes', '')
+            archived_by = request.user if request.user.is_authenticated else None
+            
+            # Get all active deployments
+            active_deployments = Deployment.objects.filter(status="active")
+            
+            archived_count = 0
+            with transaction.atomic():  # Ensure all or nothing
+                for deployment in active_deployments:
+                    # Create history record
+                    DeploymentHistory.objects.create(
+                        hcw_name=f"{deployment.hcw.first_name} {deployment.hcw.last_name}",
+                        hcw_phone=deployment.hcw.phone,
+                        hcw_email=deployment.hcw.email,
+                        hcw_position=deployment.hcw.position,
+                        district_name=deployment.district.name,
+                        outbreak_type=deployment.outbreak_type,
+                        start_date=deployment.start_date,
+                        end_date=deployment.end_date,
+                        role=deployment.role,
+                        deployment_name=deployment.deployment_name,
+                        urgency=deployment.urgency,
+                        notes=deployment.notes,
+                        original_deployment_id=deployment.id,
+                        archived_by=archived_by,
+                        completion_notes=completion_notes
+                    )
+                    
+                    # Update deployment status to 'archived'
+                    deployment.status = "archived"
+                    deployment.save()
+                    archived_count += 1
 
+            return Response({
+                'message': f'Successfully archived {archived_count} deployments',
+                'archived_count': archived_count
+            })
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e), 'detail': 'Failed to archive deployments'},
+                status=400
+            )
 
-
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """
+        Get deployment statistics
+        """
+        try:
+            active_count = Deployment.objects.filter(status="active").count()
+            archived_count = Deployment.objects.filter(status="archived").count()
+            total_count = Deployment.objects.count()
+            
+            return Response({
+                'active_count': active_count,
+                'archived_count': archived_count,
+                'total_count': total_count
+            })
+        except Exception as e:
+            return Response(
+                {'error': str(e), 'detail': 'Failed to get deployment stats'},
+                status=500
+            )
 
 
 @api_view(["GET"])

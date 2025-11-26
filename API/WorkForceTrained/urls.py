@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     DistrictViewSet, OrganizationViewSet, FacilityViewSet, CompetencyViewSet,
     HealthcareWorkerViewSet, TrainingViewSet, AvailabilityRecordViewSet,
-    DeploymentViewSet, CovidSnapshotViewSet
+    DeploymentViewSet,DeploymentHistoryViewSet
 )
 
 router = DefaultRouter()
@@ -16,7 +16,8 @@ router.register(r"hcws", HealthcareWorkerViewSet)
 router.register(r"trainings", TrainingViewSet)
 router.register(r"availability", AvailabilityRecordViewSet)
 router.register(r"deployments", DeploymentViewSet)
-router.register(r"covid", CovidSnapshotViewSet)
+router.register(r"deployment-history", DeploymentHistoryViewSet)
+
 
 
 urlpatterns = [

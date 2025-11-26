@@ -529,7 +529,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 border border-gray-300/80 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 bg-white/80 backdrop-blur-sm transition-all duration-200 shadow-sm"
                         >
-                          <option value="Chichewa/English">Chichewa/English</option>
+                          <option value="Chichewa/English">Language</option>
                           <option value="Chichewa">Chichewa</option>
                           <option value="English">English</option>
                           <option value="Other">Other</option>
@@ -552,7 +552,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
                   </div>
                 )}
 
-                {/* Step 2: Professional Information */}
+                
               {currentStep === 2 && (
               <div className="space-y-6">
     <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200/60 pb-2">
@@ -560,7 +560,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
     </h3>
     
     <div className="grid grid-cols-1 gap-6">
-      {/* Position Input */}
+      
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Position/Title *
@@ -576,7 +576,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
         />
       </div>
 
-      {/* Health Facility Dropdown */}
+    
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Health Facility *
@@ -591,7 +591,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
           >
             <option value="" className="text-gray-400">-- Select Health Facility --</option>
             {dropdownData.facilities.map((facility) => {
-              // Safely get district name
+            
               let districtName = 'Unknown District';
               
               if (typeof facility.district === 'string') {
@@ -613,7 +613,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
               );
             })}
           </select>
-          {/* Custom dropdown arrow */}
+          
           <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -630,7 +630,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
         )}
       </div>
 
-      {/* Organization Dropdown */}
+      
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Organization
@@ -653,7 +653,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
               </option>
             ))}
           </select>
-          {/* Custom dropdown arrow */}
+          
           <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -670,7 +670,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
         )}
       </div>
 
-      {/* Form Status Indicator */}
+      
       <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200/60 rounded-xl p-4 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">

@@ -13,13 +13,13 @@ const Login = ({onLogin}) => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // ✅ Automatically stay logged in after refresh
+  
   useEffect(() => {
     const token = localStorage.getItem("token");
     const refresh = localStorage.getItem("refresh");
 
     if (token && refresh) {
-      console.log("🔐 User already logged in, skipping login page...");
+    
       onLogin();
       navigate("/home");
     }
@@ -45,13 +45,13 @@ const Login = ({onLogin}) => {
         password: formData.password,
       });
 
-      console.log("✅ Login successful:", response.data);
+    
 
       if (response.data.access && response.data.refresh) {
-        // ✅ Save tokens
+    
         localStorage.setItem("token", response.data.access);
         localStorage.setItem("refresh", response.data.refresh);
-        console.log("💾 Tokens saved to localStorage");
+        
       } else {
         throw new Error("No tokens in response");
       }
@@ -59,7 +59,7 @@ const Login = ({onLogin}) => {
       onLogin();
       navigate("/home");
     } catch (err) {
-      console.error("❌ Login error:", err);
+      
       if (err.response) {
         setError(err.response.data.detail || "Invalid username or password");
       } else if (err.request) {
@@ -72,7 +72,7 @@ const Login = ({onLogin}) => {
     }
   };
 
-  // ✅ Token refresh logic
+  
   const refreshAccessToken = async () => {
     try {
       const refresh = localStorage.getItem("refresh");
@@ -81,7 +81,7 @@ const Login = ({onLogin}) => {
       const response = await axios.post("https://mohsystem.onrender.com/api/token/refresh/", { refresh });
       const newAccess = response.data.access;
       localStorage.setItem("token", newAccess);
-      console.log("♻️ Access token refreshed automatically");
+      
     } catch (error) {
       console.warn("⚠️ Refresh token expired, logging out...");
       localStorage.removeItem("token");
@@ -90,7 +90,7 @@ const Login = ({onLogin}) => {
     }
   };
 
-  // ✅ Automatically refresh token every 14 minutes (if 15 min expiry)
+  
   useEffect(() => {
     const interval = setInterval(() => {
       refreshAccessToken();

@@ -138,6 +138,8 @@ class Deployment(models.Model):
         ("Cholera", "Cholera"),
         ("Polio", "Polio"),
         ("Ebola", "Ebola"),
+        ("Malaria", "Malaria"), 
+        ("Measles", "Measles"),
         ("Other", "Other"),
     ]
 
@@ -147,7 +149,7 @@ class Deployment(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
     role = models.CharField(max_length=120, blank=True)
-    status = models.CharField(max_length=50, default="ongoing")
+    status = models.CharField(max_length=50, default="status")
     notes = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -155,23 +157,31 @@ class Deployment(models.Model):
 
     def __str__(self):
         return f"{self.hcw} - {self.outbreak_type} ({self.status})"
-
-class CovidSnapshot(models.Model):
-    timestamp = models.DateTimeField(auto_now_add=True)
-    source = models.CharField(max_length=100, default="disease.sh")
-    district = models.ForeignKey(District, on_delete=models.SET_NULL, null=True, blank=True)
-
-    cases = models.IntegerField(null=True)
-    today_cases = models.IntegerField(null=True)
-    deaths = models.IntegerField(null=True)
-    today_deaths = models.IntegerField(null=True)
-    recovered = models.IntegerField(null=True)
-    active = models.IntegerField(null=True)
-    raw = models.JSONField(null=True, blank=True)
+class DeploymentHistory(models.Model):
+    # Copy all fields from Deployment
+    hcw_name = models.CharField(max_length=255)  # Store name instead of FK
+    hcw_phone = models.CharField(max_length=20, blank=True, null=True)
+    hcw_email = models.EmailField(blank=True, null=True)
+    hcw_position = models.CharField(max_length=120, blank=True, null=True)
+    
+    district_name = models.CharField(max_length=100)
+    outbreak_type = models.CharField(max_length=50)
+    start_date = models.DateField()
+    end_date = models.DateField(blank=True, null=True)
+    role = models.CharField(max_length=120, blank=True)
+    deployment_name = models.CharField(max_length=200, blank=True, null=True)
+    urgency = models.CharField(max_length=20, default="medium")
+    notes = models.TextField(blank=True, null=True)
+    
+    
+    original_deployment_id = models.IntegerField(blank=True, null=True)  
+    archived_at = models.DateTimeField(auto_now_add=True)
+    archived_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    completion_notes = models.TextField(blank=True, null=True)
 
     class Meta:
-        ordering = ["-timestamp"]
+        ordering = ["-archived_at"]
+        verbose_name_plural = "Deployment Histories"
 
     def __str__(self):
-        label = self.district.name if self.district else "Malawi (National)"
-        return f"{label} @ {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
+        return f"{self.hcw_name} - {self.outbreak_type} (Archived)"
