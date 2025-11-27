@@ -47,7 +47,9 @@ class OrganizationViewSet(viewsets.ModelViewSet):
 
 
 class FacilityViewSet(viewsets.ModelViewSet):
-    queryset = Facility.objects.select_related("district", "organization")
+    queryset = Facility.objects.select_related("district", "organization").only(
+        'id','name','code','facility_type','district_id','organization_id'
+    )
     serializer_class = FacilitySerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ["facility_type", "district"]
@@ -62,7 +64,14 @@ class CompetencyViewSet(viewsets.ModelViewSet):
 
 
 class HealthcareWorkerViewSet(viewsets.ModelViewSet):
-    queryset = HealthcareWorker.objects.select_related("facility", "organization")
+
+    queryset =  (
+        HealthcareWorker.objects.select_related
+        ("facility", "facility__district","organization")
+        .only('id','national_id','first_name','last_name','phone','email','gender',
+              'disability','language','position','is_active','facility_id','organization_id',
+              'created_at','updated_at')
+        )
     serializer_class = HealthcareWorkerSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["facility__district", "organization", "is_active", "gender"]
