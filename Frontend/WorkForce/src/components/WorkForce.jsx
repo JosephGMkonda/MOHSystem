@@ -8,6 +8,7 @@ const WorkForce = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('all');
   const [selectedProfession, setSelectedProfession] = useState('all');
+  const [selectedCompetency, setSelectedCompetency] = useState('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showViewDetail, setShowViewDetail] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
@@ -127,41 +128,53 @@ const WorkForce = () => {
     }
   };
 
-  const fetchWorkforceData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const config = getAuthConfig();
-      
-      if (!config.headers?.Authorization) {
-        setError('Authentication required. Please log in again.');
-        setLoading(false);
-        return;
-      }
+ const fetchAllPages = async (url, config) => {
+  let results = [];
+  let nextUrl = url;
 
-      const [hcwsResponse, trainingsResponse, availabilityResponse] = await Promise.all([
-        axios.get('https://mohsystem.onrender.com/api/hcws/', config),
-        axios.get('https://mohsystem.onrender.com/api/trainings/', config),
-        axios.get('https://mohsystem.onrender.com/api/availability/', config)
-      ]);
+  while (nextUrl) {
+    const res = await axios.get(nextUrl, config);
+    // Some APIs return results in res.data.results, some directly in res.data
+    const pageResults = res.data.results || res.data;
+    results = [...results, ...pageResults];
+    nextUrl = res.data.next; // DRF pagination provides 'next' URL
+  }
 
-      const transformedWorkers = transformApiData(
-        hcwsResponse.data,
-        trainingsResponse.data,
-        availabilityResponse.data
-      );
+  return results;
+};
 
-      setAllWorkers(transformedWorkers);
-      setWorkers(transformedWorkers); 
+const fetchWorkforceData = async () => {
+  try {
+    setLoading(true);
+    setError(null);
 
-    } catch (error) {
-      console.error('Error fetching workforce data:', error);
-      setError(`Failed to load data: ${error.response?.status || error.message}`);
-    } finally {
+    const config = getAuthConfig();
+
+    if (!config.headers?.Authorization) {
+      setError('Authentication required. Please log in again.');
       setLoading(false);
+      return;
     }
-  };
+
+    // Fetch all pages
+    const [hcws, trainings, availability] = await Promise.all([
+      fetchAllPages('https://mohsystem.onrender.com/api/hcws/', config),
+      fetchAllPages('https://mohsystem.onrender.com/api/trainings/', config),
+      fetchAllPages('https://mohsystem.onrender.com/api/availability/', config),
+    ]);
+
+    const transformedWorkers = transformApiData(hcws, trainings, availability);
+
+    setAllWorkers(transformedWorkers);
+    setWorkers(transformedWorkers);
+  } catch (error) {
+    console.error('Error fetching workforce data:', error);
+    setError(`Failed to load data: ${error.response?.status || error.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const transformApiData = (hcws, trainings, availability) => {
     return hcws.map(hcw => {
@@ -196,47 +209,57 @@ const WorkForce = () => {
   };
 
   
-  const applyFilters = () => {
-    let filtered = allWorkers;
+ const applyFilters = () => {
+  let filtered = allWorkers;
 
-    
-    if (selectedDistrict !== 'all') {
-      filtered = filtered.filter(worker => 
-        worker.district.toLowerCase() === selectedDistrict.toLowerCase()
-      );
-    }
+  if (selectedDistrict !== 'all') {
+    filtered = filtered.filter(worker => 
+      worker.district.toLowerCase() === selectedDistrict.toLowerCase()
+    );
+  }
 
-    // Profession filter
-    if (selectedProfession !== 'all') {
-      filtered = filtered.filter(worker => 
-        worker.profession.toLowerCase() === selectedProfession.toLowerCase()
-      );
-    }
+  if (selectedProfession !== 'all') {
+    filtered = filtered.filter(worker => 
+      worker.profession.toLowerCase() === selectedProfession.toLowerCase()
+    );
+  }
 
-    // Search term filter
-    if (searchTerm) {
-      filtered = filtered.filter(worker =>
-        worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        worker.profession.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        worker.originalProfession.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        worker.district.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        worker.facility.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        worker.organization.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+  if (selectedCompetency !== 'all') {
+    filtered = filtered.filter(worker =>
+      worker.competencies.includes(selectedCompetency)
+    );
+  }
 
-    return filtered;
-  };
+  if (searchTerm) {
+    filtered = filtered.filter(worker =>
+      worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      worker.profession.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      worker.originalProfession.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      worker.district.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      worker.facility.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      worker.organization.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  return filtered;
+};
+
 
 useEffect(() => {
   setCurrentPage(1);
-}, [searchTerm, selectedDistrict, selectedProfession]);
-
+}, [searchTerm, selectedDistrict, selectedProfession, selectedCompetency]);
   // Get unique professions for dropdown (normalized)
   const getUniqueProfessions = () => {
     const professions = [...new Set(allWorkers.map(worker => worker.profession))];
     return professions.sort();
   };
+
+  const getUniqueCompetencies = () => {
+  const allCompetencies = allWorkers.flatMap(worker => worker.competencies);
+  const uniqueCompetencies = [...new Set(allCompetencies)];
+  return uniqueCompetencies.sort();
+};
+
 
   // Get statistics for current filtered view
   const getStatistics = () => {
@@ -481,6 +504,8 @@ const totalPages = Math.ceil(allFiltered.length / itemsPerPage);
             </div>
           </div>
           <div className="flex space-x-3">
+
+            
             <select 
               value={selectedDistrict}
               onChange={(e) => handleDistrictChange(e.target.value)}
@@ -493,6 +518,19 @@ const totalPages = Math.ceil(allFiltered.length / itemsPerPage);
                 </option>
               ))}
             </select>
+            <select 
+  value={selectedCompetency}
+  onChange={(e) => setSelectedCompetency(e.target.value)}
+  className="border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+>
+  <option value="all">All Competencies</option>
+  {getUniqueCompetencies().map(comp => (
+    <option key={comp} value={comp}>
+      {comp}
+    </option>
+  ))}
+</select>
+
             <select 
               value={selectedProfession}
               onChange={(e) => handleProfessionChange(e.target.value)}
@@ -535,6 +573,19 @@ const totalPages = Math.ceil(allFiltered.length / itemsPerPage);
             )}
           </div>
         )}
+
+        {selectedCompetency !== 'all' && (
+  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+    Competency: {selectedCompetency}
+    <button 
+      onClick={() => setSelectedCompetency('all')}
+      className="ml-2 hover:text-purple-600"
+    >
+      ×
+    </button>
+  </span>
+)}
+
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
