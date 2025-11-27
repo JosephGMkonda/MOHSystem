@@ -29,7 +29,7 @@ class FacilitySerializer(serializers.ModelSerializer):
         model = Facility
         fields = [
             "id", "name", "code", "facility_type",
-            "district", "district_id", "organization"
+            "district", "district_id", "district_name","organization"
         ]
 
 
