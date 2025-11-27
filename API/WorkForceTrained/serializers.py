@@ -21,13 +21,15 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class FacilitySerializer(serializers.ModelSerializer):
+    district = DistrictSerializer(read_only=True)
     district_name = serializers.CharField(source="district.name", read_only=True)
+    district_id = serializers.PrimaryKeyRelatedField( source="district", queryset=District.objects.all(), write_only=True )
 
     class Meta:
         model = Facility
         fields = [
             "id", "name", "code", "facility_type",
-            "district", "district_name", "organization"
+            "district", "district_id", "organization"
         ]
 
 
@@ -40,6 +42,8 @@ class CompetencySerializer(serializers.ModelSerializer):
 class HealthcareWorkerSerializer(serializers.ModelSerializer):
     facility_details = FacilitySerializer(source="facility", read_only=True)
     organization_name = serializers.CharField(source="organization.name", read_only=True)
+    
+
     
 
     class Meta:

@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Prefetch, OuterRef, Subquery
 from django.http import HttpResponse
+from rest_framework.pagination import PageNumberPagination
 import csv
 from io import StringIO, BytesIO
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -63,6 +64,12 @@ class CompetencyViewSet(viewsets.ModelViewSet):
     search_fields = ["name", "code"]
 
 
+class HealthcareWorkerPagination(PageNumberPagination):
+    page_size = 10         
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+
+
 class HealthcareWorkerViewSet(viewsets.ModelViewSet):
 
     queryset =  (
@@ -73,6 +80,7 @@ class HealthcareWorkerViewSet(viewsets.ModelViewSet):
               'created_at','updated_at')
         )
     serializer_class = HealthcareWorkerSerializer
+    pagination_class = HealthcareWorkerPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["facility__district", "organization", "is_active", "gender"]
     search_fields = ["first_name", "last_name", "phone", "national_id"]

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
 import axios from 'axios';
 import AddHealthWorker from './AddHealthWorker';
 import ViewDetail from './ViewDetail';
@@ -11,10 +12,12 @@ const WorkForce = () => {
   const [showViewDetail, setShowViewDetail] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [workers, setWorkers] = useState([]);
-  const [allWorkers, setAllWorkers] = useState([]); // Store all workers for filtering
+  const [allWorkers, setAllWorkers] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [districts, setDistricts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const getAuthConfig = () => {
     const token = localStorage.getItem('token') || 
@@ -35,7 +38,7 @@ const WorkForce = () => {
     };
   };
 
-  // Profession normalization mapping
+  
   const professionMapping = {
     // Nurse variations
     'nurse': 'Nurse',
@@ -76,25 +79,25 @@ const WorkForce = () => {
     'nutritionist': 'Nutritionist'
   };
 
-  // Normalize profession names
+  
   const normalizeProfession = (profession) => {
     if (!profession) return 'Other';
     
     const lowerProfession = profession.toLowerCase().trim();
     
-    // Exact match
+    
     if (professionMapping[lowerProfession]) {
       return professionMapping[lowerProfession];
     }
     
-    // Partial match
+    
     for (const [key, value] of Object.entries(professionMapping)) {
       if (lowerProfession.includes(key) || key.includes(lowerProfession)) {
         return value;
       }
     }
     
-    // Return original with capitalization if no match found
+    
     return profession.charAt(0).toUpperCase() + profession.slice(1).toLowerCase();
   };
 
@@ -113,7 +116,7 @@ const WorkForce = () => {
     fetchDistricts();
   }, []);
 
-  // Fetch districts for dropdown
+  
   const fetchDistricts = async () => {
     try {
       const config = getAuthConfig();
@@ -149,8 +152,8 @@ const WorkForce = () => {
         availabilityResponse.data
       );
 
-      setAllWorkers(transformedWorkers); // Store all workers
-      setWorkers(transformedWorkers); // Initially show all workers
+      setAllWorkers(transformedWorkers);
+      setWorkers(transformedWorkers); 
 
     } catch (error) {
       console.error('Error fetching workforce data:', error);
@@ -179,7 +182,7 @@ const WorkForce = () => {
         id: hcw.id,
         name: `${hcw.first_name} ${hcw.last_name}`,
         profession: normalizedProfession,
-        originalProfession: hcw.position, // Keep original for display
+        originalProfession: hcw.position, 
         district: hcw.facility_details?.district?.name || hcw.facility?.district?.name || 'Unknown',
         facility: hcw.facility_details?.name || hcw.facility?.name || 'Unknown Facility',
         organization: hcw.organization_name || `Organization ID: ${hcw.organization}` || 'Unknown Organization',
@@ -192,11 +195,11 @@ const WorkForce = () => {
     });
   };
 
-  // Complex filtering algorithm
+  
   const applyFilters = () => {
     let filtered = allWorkers;
 
-    // District filter
+    
     if (selectedDistrict !== 'all') {
       filtered = filtered.filter(worker => 
         worker.district.toLowerCase() === selectedDistrict.toLowerCase()
@@ -224,6 +227,10 @@ const WorkForce = () => {
 
     return filtered;
   };
+
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchTerm, selectedDistrict, selectedProfession]);
 
   // Get unique professions for dropdown (normalized)
   const getUniqueProfessions = () => {
@@ -263,7 +270,14 @@ const WorkForce = () => {
     setSelectedProfession('all');
   };
 
-  const filteredWorkers = applyFilters();
+const allFiltered = applyFilters();
+
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const paginatedWorkers = allFiltered.slice(indexOfFirstItem, indexOfLastItem);
+
+const totalPages = Math.ceil(allFiltered.length / itemsPerPage);
+
   const statistics = getStatistics();
 
   const getStatusColor = (status) => {
@@ -537,22 +551,18 @@ const WorkForce = () => {
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Location
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
+              
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Competencies
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Last Training
-                </th>
+                
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredWorkers.map((worker) => (
+              {paginatedWorkers.map((worker) => (
                 <tr key={worker.id} className="hover:bg-gray-50 transition-colors duration-150">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -567,11 +577,7 @@ const WorkForce = () => {
                     <div className="text-sm text-gray-900">{worker.district}</div>
                     <div className="text-sm text-gray-500">{worker.facility}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(worker.status)}`}>
-                      {formatStatus(worker.status)}
-                    </span>
-                  </td>
+                 
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1">
                       {worker.competencies.map((comp, index) => (
@@ -587,27 +593,33 @@ const WorkForce = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {worker.lastTraining ? new Date(worker.lastTraining).toLocaleDateString() : 'No training'}
-                  </td>
+                 
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleViewDetails(worker)}
-                        className="text-blue-600 hover:text-blue-900 font-semibold transition-colors duration-200"
-                      >
-                        View
-                      </button>
-                      <button className="text-green-600 hover:text-green-900 font-semibold transition-colors duration-200">
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteWorker(worker.id)}
-                        className="text-red-600 hover:text-red-900 font-semibold transition-colors duration-200"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <div className="flex items-center space-x-2">
+  
+  <button
+    onClick={() => handleViewDetails(worker)}
+    className="flex items-center px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200 font-medium"
+  >
+    <Eye className="w-4 h-4 mr-1" />
+    
+  </button>
+
+  
+  {/* <button className="flex items-center px-3 py-2 text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200 font-medium">
+    <Edit className="w-4 h-4 mr-1" />
+    Edit
+  </button> */}
+
+  
+  <button 
+    onClick={() => handleDeleteWorker(worker.id)}
+    className="flex items-center px-3 py-2 text-sm bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors duration-200 font-medium"
+  >
+    <Trash2 className="w-4 h-4 mr-1" />
+    
+  </button>
+</div>
                   </td>
                 </tr>
               ))}
@@ -616,7 +628,7 @@ const WorkForce = () => {
         </div>
 
         
-        {filteredWorkers.length === 0 && workers.length === 0 && (
+        {paginatedWorkers.length === 0 && workers.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">👥</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No healthcare workers found</h3>
@@ -630,7 +642,7 @@ const WorkForce = () => {
           </div>
         )}
 
-        {filteredWorkers.length === 0 && workers.length > 0 && (
+        {paginatedWorkers.length === 0 && workers.length > 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">🔍</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No workers match your search</h3>
@@ -646,20 +658,133 @@ const WorkForce = () => {
 
         
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Showing <span className="font-semibold">{filteredWorkers.length}</span> of{' '}
-              <span className="font-semibold">{workers.length}</span> workers
-            </div>
-            <div className="flex space-x-2">
-              <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                Previous
-              </button>
-              <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                Next
-              </button>
-            </div>
-          </div>
+      
+
+{/* Pagination */}
+<div className="flex items-center justify-between mt-4 px-4">
+  <p className="text-sm text-gray-600">
+    Page <span className="font-semibold">{currentPage}</span> of{" "}
+    <span className="font-semibold">{totalPages}</span>
+  </p>
+
+  <div className="flex items-center space-x-2">
+    {/* First Page */}
+    <button
+      onClick={() => setCurrentPage(1)}
+      disabled={currentPage === 1}
+      className={`flex items-center px-3 py-2 rounded-lg border shadow-sm transition ${
+        currentPage === 1 
+          ? "cursor-not-allowed bg-gray-100 text-gray-400" 
+          : "bg-white hover:bg-gray-50 text-gray-700"
+      }`}
+    >
+      <ChevronsLeft className="w-4 h-4" />
+    </button>
+
+    {/* Previous */}
+    <button
+      onClick={() => setCurrentPage(prev => prev - 1)}
+      disabled={currentPage === 1}
+      className={`flex items-center px-3 py-2 rounded-lg border shadow-sm transition ${
+        currentPage === 1 
+          ? "cursor-not-allowed bg-gray-100 text-gray-400" 
+          : "bg-white hover:bg-gray-50 text-gray-700"
+      }`}
+    >
+      <ChevronLeft className="w-4 h-4 mr-1" />
+      Prev
+    </button>
+
+
+    {(() => {
+      const pages = [];
+      const maxVisiblePages = 5;
+      
+      if (totalPages <= maxVisiblePages) {
+        
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+      
+        pages.push(1);
+        
+        
+        let start = Math.max(2, currentPage - 1);
+        let end = Math.min(totalPages - 1, currentPage + 1);
+        
+        
+        if (start > 2) {
+          pages.push('...');
+        }
+        
+        
+        for (let i = start; i <= end; i++) {
+          pages.push(i);
+        }
+        
+      
+        if (end < totalPages - 1) {
+          pages.push('...');
+        }
+        
+        
+        pages.push(totalPages);
+      }
+
+      return pages.map((page, index) => 
+        page === '...' ? (
+          <span key={`ellipsis-${index}`} className="px-2 text-gray-500">
+            ...
+          </span>
+        ) : (
+          <button
+            key={page}
+            onClick={() => setCurrentPage(page)}
+            className={`px-3 py-2 rounded-lg border shadow-sm transition min-w-[40px] ${
+              currentPage === page
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white hover:bg-gray-50 text-gray-700"
+            }`}
+          >
+            {page}
+          </button>
+        )
+      );
+    })()}
+
+    {/* Next */}
+    <button
+      onClick={() => setCurrentPage(prev => prev + 1)}
+      disabled={currentPage === totalPages}
+      className={`flex items-center px-3 py-2 rounded-lg border shadow-sm transition ${
+        currentPage === totalPages
+          ? "cursor-not-allowed bg-gray-100 text-gray-400"
+          : "bg-white hover:bg-gray-50 text-gray-700"
+      }`}
+    >
+      Next
+      <ChevronRight className="w-4 h-4 ml-1" />
+    </button>
+
+    {/* Last Page */}
+    <button
+      onClick={() => setCurrentPage(totalPages)}
+      disabled={currentPage === totalPages}
+      className={`flex items-center px-3 py-2 rounded-lg border shadow-sm transition ${
+        currentPage === totalPages
+          ? "cursor-not-allowed bg-gray-100 text-gray-400"
+          : "bg-white hover:bg-gray-50 text-gray-700"
+      }`}
+    >
+      <ChevronsRight className="w-4 h-4" />
+    </button>
+  </div>
+</div>
+
+
+
+         
         </div>
       </div>
 
