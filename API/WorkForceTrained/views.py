@@ -206,10 +206,7 @@ class DeploymentViewSet(viewsets.ModelViewSet):
 
 @api_view(["GET"])
 def healthcare_dashboard_data(request):
-    """
-    Healthcare dashboard data with filter support
-    """
-    # Extract filter parameters from request
+    
     filters = {
         'district': request.GET.get('district'),
         'gender': request.GET.get('gender'),
@@ -217,10 +214,10 @@ def healthcare_dashboard_data(request):
         'facility_type': request.GET.get('facility_type'),
     }
     
-    # Remove None values and empty strings
+    
     filters = {k: v for k, v in filters.items() if v is not None and v != ''}
     
-    print(f"Received filters: {filters}")  # Debug
+    print(f"Received filters: {filters}")  
     
     try:
         data = get_healthcare_data_summary(filters)
@@ -237,3 +234,28 @@ def healthcare_dashboard_data(request):
             },
             status=500
         )
+
+        
+@api_view(["GET"])
+def deployment_search(request):
+    district = request.GET.get("district")
+    competency = request.GET.get("competency")
+    position = request.GET.get("position")
+    needed = int(request.GET.get("needed", 10))
+
+    workers = HealthcareWorker.objects.filter(is_active=True)
+
+    if district:
+        workers = workers.filter(facility__district_id=district)
+
+    if position:
+        workers = workers.filter(position__icontains=position)
+
+    if competency:
+        workers = workers.filter(competencies__id=competency).distinct()
+
+    
+    workers = workers.order_by("first_name")[:needed]
+
+    serializer = HealthcareWorkerSerializer(workers, many=True)
+    return Response(serializer.data)

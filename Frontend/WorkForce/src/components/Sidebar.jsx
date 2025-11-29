@@ -8,9 +8,9 @@ const Sidebar = ({ onLogout }) => {
   const menuItems = [
     { path: '/home', label: 'Dashboard', icon: '📊' },
     { path: '/workforce', label: 'Workforce', icon: '👥' },
-    { path: '/deployments', label: 'Deployments', icon: '🚑' },
-    { path: '/analytics', label: 'Analytics', icon: '📈' },
-     { path: '/deployment-history', icon: '📚', label: 'Deployment History' },
+    // { path: '/deployments', label: 'Deployments', icon: '🚑' },
+    // { path: '/analytics', label: 'Analytics', icon: '📈' },
+    //  { path: '/deployment-history', icon: '📚', label: 'Deployment History' },
   ];
 
   return (
