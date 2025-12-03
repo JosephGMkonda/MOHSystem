@@ -1,13 +1,18 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation,  useNavigate  } from 'react-router-dom';
 
 const Sidebar = ({ onLogout }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  console.log("Sidebar location.pathname:", location.pathname);
+
 
   const menuItems = [
     { path: '/home', label: 'Dashboard', icon: '📊' },
     { path: '/workforce', label: 'Workforce', icon: '👥' },
+    
+    
     // { path: '/deployments', label: 'Deployments', icon: '🚑' },
     // { path: '/analytics', label: 'Analytics', icon: '📈' },
     //  { path: '/deployment-history', icon: '📚', label: 'Deployment History' },
@@ -44,6 +49,15 @@ const Sidebar = ({ onLogout }) => {
       
 
       <div className="p-4 border-t border-blue-200 bg-white">
+
+        <Link
+          to="/help"
+          className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:border hover:border-blue-200 rounded-lg transition-all duration-200 font-medium mb-2"
+        >
+          <span className="text-lg">❓</span>
+          <span>Help</span>
+        </Link>
+
         <button
           onClick={onLogout}
           className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-700 hover:border hover:border-red-200 rounded-lg transition-all duration-200 font-medium"
