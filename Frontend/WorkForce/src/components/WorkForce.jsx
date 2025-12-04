@@ -343,7 +343,7 @@ const totalPages = Math.ceil(allFiltered.length / itemsPerPage);
     }
   };
 
-  // Loading and error states remain the same...
+  
   if (loading) {
     return (
       <div className="p-6">
@@ -377,7 +377,7 @@ const totalPages = Math.ceil(allFiltered.length / itemsPerPage);
 
   return (
     <div className="p-6">
-      {/* Header Section */}
+      
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Healthcare Workforce</h1>
@@ -415,7 +415,7 @@ const totalPages = Math.ceil(allFiltered.length / itemsPerPage);
         </button>
       </div>
 
-      {/* Statistics Cards - Now dynamic based on filters */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
@@ -546,7 +546,7 @@ const totalPages = Math.ceil(allFiltered.length / itemsPerPage);
           </div>
         </div>
         
-        {/* Active Filters Display */}
+        
         {(selectedDistrict !== 'all' || selectedProfession !== 'all') && (
           <div className="mt-4 flex flex-wrap gap-2">
             {selectedDistrict !== 'all' && (

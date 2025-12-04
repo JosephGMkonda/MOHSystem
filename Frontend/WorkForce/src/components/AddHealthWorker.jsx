@@ -240,7 +240,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
         return;
       }
 
-      // 1. Create healthcare worker
+      
       const hcwResponse = await axios.post(
         'https://mohsystem.onrender.com/api/hcws/', hcwPayload, config
       );
@@ -250,7 +250,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
       const hcwId = hcwResponse.data.id;
       
 
-      // 2. Create trainings (if any)
+      
       if (formData.trainings.length > 0) {
         const trainingPromises = formData.trainings
           .filter(training => training.date_completed)
@@ -418,7 +418,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
                 </div>
               </div>
 
-              {/* Form Content */}
+              
               <form onSubmit={handleSubmit} className="p-6 max-h-[60vh] overflow-y-auto">
                 {/* Step 1: Personal Information */}
                 {currentStep === 1 && (
@@ -690,7 +690,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
     </div>
              </div>
                )}
-                {/* Step 3: Competencies & Training */}
+                
                 {/* Step 3: Competencies & Training */}
 {currentStep === 3 && (
   <div className="space-y-6">
@@ -741,7 +741,7 @@ const AddHealthWorker = ({ isOpen, onClose, onSuccess }) => {
         </p>
       </div>
 
-      {/* Rest of your competencies list remains the same */}
+      
       <div className="space-y-3">
         {formData.trainings.map(training => {
           const competency = dropdownData.competencies.find(c => c.id == training.competency);

@@ -5,8 +5,6 @@ import Home from "./components/Home";
 import Sidebar from "./components/Sidebar"; 
 import Topbar from "./components/Topbar";
 import WorkForce from './components/WorkForce';
-import Deployment from './components/Deployment';
-import DeploymentHistory from './components/DeploymentHistory';
 import Help from './components/Help';
 import Configuration from './components/Configuration';
 
@@ -111,23 +109,9 @@ function App() {
                 <Navigate to="/login" replace />
             } 
           />
-            <Route 
-            path="/deployments" 
-            element={
-              isAuthenticated ? 
-                <HomeLayout onLogout={handleLogout}><Deployment /></HomeLayout> : 
-                <Navigate to="/login" replace />
-            } 
-          />
+       
 
-             <Route 
-            path="/deployment-history" 
-            element={
-              isAuthenticated ? 
-                <HomeLayout onLogout={handleLogout}><DeploymentHistory /></HomeLayout> : 
-                <Navigate to="/login" replace />
-            } 
-          />
+        
           
           
           <Route 

@@ -465,12 +465,12 @@ const Configuration = () => {
         </div>
         
         <script>
-          // Auto-print after a short delay
+          
           setTimeout(() => {
             window.print();
           }, 500);
           
-          // Close window after print
+    
           window.onafterprint = function() {
             setTimeout(() => {
               window.close();
@@ -568,9 +568,9 @@ const Configuration = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      {/* Main Content */}
+      
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Workforce Printing & Export</h1>
           <p className="text-gray-600 mt-2">
@@ -684,7 +684,7 @@ const Configuration = () => {
             </div>
           </div>
           
-          {/* Active Filters Display */}
+          
           <div className="mt-4 flex flex-wrap gap-2">
             {selectedDistrict !== 'all' && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
