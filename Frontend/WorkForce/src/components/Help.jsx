@@ -134,7 +134,7 @@ const Help = () => {
         
         <div className="mt-8 text-center text-gray-500 text-sm">
           <p>Malawi Ministry of Health - Outbreak Response System Support</p>
-          <p className="mt-1">Last updated: {new Date().toLocaleDateString()}</p>
+          
           <p>Developed by Chifundo Bita and Joseph Mkonda</p>
         </div>
       </div>
