@@ -26,9 +26,10 @@ const Sidebar = ({ onLogout }) => {
       <div className="p-6 border-b border-blue-200 bg-white">
         <h1 className="text-xl font-bold text-gray-800">Malawi MOH</h1>
         <p className="text-sm text-gray-600 mt-1">Outbreak Response System</p>
+        <p className="text-sm text-gray-600 mt-1 pt-2">V 1.0.0</p>
       </div>
       
-      <p className="text-sm text-gray-600 mt-1">V 1.0.0</p>
+      
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {menuItems.map(item => (
