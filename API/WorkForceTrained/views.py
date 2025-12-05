@@ -134,20 +134,18 @@ class DeploymentViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def archive_all(self, request):
-        """
-        Archive all active deployments and move to history
-        """
+        
         try:
             completion_notes = request.data.get('completion_notes', '')
             archived_by = request.user if request.user.is_authenticated else None
             
-            # Get all active deployments
+            
             active_deployments = Deployment.objects.filter(status="active")
             
             archived_count = 0
-            with transaction.atomic():  # Ensure all or nothing
+            with transaction.atomic(): 
                 for deployment in active_deployments:
-                    # Create history record
+                    
                     DeploymentHistory.objects.create(
                         hcw_name=f"{deployment.hcw.first_name} {deployment.hcw.last_name}",
                         hcw_phone=deployment.hcw.phone,

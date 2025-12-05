@@ -12,6 +12,8 @@ djangorestframework-simplejwt = "*"
 faker = "*"
 gunicorn = "*"
 whitenoise = "*"
+psycopg2-binary = "*"
+dj-database-url = "*"
 
 [dev-packages]
 

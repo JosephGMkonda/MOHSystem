@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -110,12 +110,16 @@ SIMPLE_JWT = {
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.parse(
+        "postgresql://neondb_owner:npg_QPJC3YzxVUu2@ep-red-wind-ab0nlszu-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
+
 
 AUTH_USER_MODEL = "auth.User"
 
